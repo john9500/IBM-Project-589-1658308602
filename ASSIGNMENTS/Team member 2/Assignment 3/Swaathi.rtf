@@ -1,0 +1,79 @@
+{\rtf1\ansi\deff0\nouicompat{\fonttbl{\f0\fnil\fcharset0 Calibri;}}
+{\*\generator Riched20 6.3.9600}\viewkind4\uc1 
+\pard\sa200\sl276\slmult1\f0\fs22\lang9 import os\par
+import datetime\par
+import subprocess\par
+from flask import Flask, flash, request, redirect, url_for\par
+from werkzeug.utils import secure_filename\par
+\par
+app = Flask(_name_)\par
+app.secret_key = b'_5#y2L"F4Q8z\\n\\xec]iasdfffsd/'\par
+\par
+ALLOWED_EXTENSIONS = set(['txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif', 'csv'])\par
+\par
+\par
+\par
+def CreateNewDir():\par
+    print ("I am being called")\par
+    global UPLOAD_FOLDER\par
+    print (UPLOAD_FOLDER)\par
+    UPLOAD_FOLDER = UPLOAD_FOLDER+datetime.datetime.now().strftime("%d%m%y%H")\par
+    cmd="mkdir -p %s && ls -lrt %s"%(UPLOAD_FOLDER,UPLOAD_FOLDER)\par
+    output = subprocess.Popen([cmd], shell=True,  stdout = subprocess.PIPE).communicate()[0]\par
+\par
+    if "total 0" in output:\par
+        print ("Success: Created Directory %s"%UPLOAD_FOLDER) \par
+    else:\par
+        print ("Failure: Failed to Create a Directory (or) Directory already Exists",UPLOAD_FOLDER)\par
+\par
+def allowed_file(filename):\par
+    return '.' in filename and \\\par
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS\par
+\par
+@app.route('/', methods=['GET', 'POST'])\par
+def upload_file():\par
+    if request.method == 'POST':\par
+        # check if the post request has the file part\par
+        if 'file' not in request.files:\par
+            flash('No file part')\par
+            return redirect(request.url)\par
+        file = request.files['file']\par
+        # if user does not select file, browser also\par
+        # submit an empty part without filename\par
+        if file.filename == '':\par
+            flash('No selected file')\par
+            return redirect(request.url)\par
+        if file and allowed_file(file.filename):\par
+            filename = secure_filename(file.filename)\par
+            UPLOAD_FOLDER = './upload_dir/'\par
+            CreateNewDir()\par
+            global UPLOAD_FOLDER\par
+            file.save(os.path.join(UPLOAD_FOLDER, filename))\par
+            return redirect(url_for('uploaded_file',\par
+                                    filename=filename))\par
+    return '''\par
+    <!doctype html>\par
+    <title>Upload new File</title>\par
+    <h1>Upload new File</h1>\par
+    <form method=post enctype=multipart/form-data>\par
+      <input type=file name=file>\par
+      <input type=submit value=Upload>\par
+    </form>\par
+    '''\par
+\par
+\par
+@app.route('/uploaded', methods=['GET', 'POST'])\par
+def uploaded_file():\par
+\tab return '''\par
+\tab <!doctype html>\par
+\tab <title>Uploaded the file</title>\par
+\tab <h1> File has been Successfully Uploaded </h1>\par
+\tab '''\par
+\par
+if _name_ == '_main_':\par
+      app.secret_key = 'super secret key'\par
+      app.config['SESSION_TYPE'] = 'filesystem'\par
+      sess.init_app(app)\par
+      app.debug = True\par
+      app.run()\par
+}
